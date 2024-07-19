@@ -13,12 +13,14 @@ import (
 // Request includes all the necessary data for creating an HTTP request. Method can be a string; or be one of the
 // predefined ones by this module. URL must be the full address with all the prefix and suffixes.
 // Header, Cookies and Body are not mandatory and might be filled based on the requirements.
+// Params is a map for providing URL-encoded query parameters.
 type Request struct {
 	Method  Method
 	URL     string
 	Header  http.Header
 	Cookies []*http.Cookie
 	Body    []byte
+	Params  map[string]string
 }
 
 // Response consists of some of the HTTP response data.
@@ -40,6 +42,12 @@ func Send(ctx context.Context, client *http.Client, r Request) (*Response, error
 	for _, c := range r.Cookies {
 		req.AddCookie(c)
 	}
+
+	q := req.URL.Query()
+	for k, v := range r.Params {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
 
 	resp, err := client.Do(req)
 	if err != nil {
